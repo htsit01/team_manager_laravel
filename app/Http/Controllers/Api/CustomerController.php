@@ -8,6 +8,7 @@ use App\CreditForm;
 use App\CreditFormSupplier;
 use App\Customer;
 use App\FollowUp;
+use App\FollowUpCustomer;
 use App\ListPlan;
 use App\VisitPlan;
 use Carbon\Carbon;
@@ -32,6 +33,7 @@ class CustomerController extends Controller
             'customer_id'=>'required',
             'lat'=>'required',
             'lng'=>'required',
+            'address'=>'required',
             'date_time'=>'required',
             'plan_id'=>'required'
         ]);
@@ -170,6 +172,7 @@ class CustomerController extends Controller
             'customer_id'=>'required',
             'lat'=>'required',
             'lng'=>'required',
+            'address'=>'required',
             'date_time'=>'required',
             'plan_id'=>'required'
         ]);
@@ -485,90 +488,54 @@ class CustomerController extends Controller
 //            'customer_id'=>'required',
             'lat'=>'required',
             'lng'=>'required',
-            'date_time'=>'required',
-            'plan_id'=>'required'
+            'address'=>'required',
+            'date_time'=>'required|date_format:Y-m-d',
+            'start_time'=>'required|date_format:Y-m-d H:i:s', // i in this case is minute
+            'followup_id'=>'required',
+            'type'=>'required|integer|min:0|max:1'
         ]);
 
-        $user = $request->user();
         $lat = $request['lat'];
         $lng = $request['lng'];
         $address = $request['address'];
         $date_time = $request['date_time'];
-        $plan_id = $request['plan_id'];
+        $followup_id = $request['followup_id'];
+        $type = $request['type'];
 
-        $plan = FollowUp::find($plan_id);
+        /*
+        * 0: Means followup end user
+        * 1: Means followup customer
+        */
+        if($type==0){
+            $followup = FollowUp::find($followup_id);
+        }
+        else{
+            $followup = FollowUpCustomer::find($followup_id);
+        }
 
-        if($plan== null){
+        if($followup== null){
             return response()->json([
                 'message' => 'Plan not found'
             ]);
         }
 
         /*
-         * We get current user last checkin and last checkout.
-         * This is for determined whether user can do checkin or not
+         * testing
+         * TODO:: delete this
          */
+        if($followup->start_time==null){
 
-        $last_checkin = $user->checkins->sortByDesc('date_time')->first();
-        $last_checkout = $user->checkouts->sortByDesc('date_time')->first();
-
-
-        if($last_checkin==null){
-
-            $plan->checkin_lat = $lat;
-            $plan->checkin_lng = $lng;
-            $plan->address = $address;
-            $plan->start_time = $date_time;
-            $plan->status_done = 1;
-            if($request['customer_id']){
-                $plan->customer_id = $request['customer_id'];
-            }
-            $plan->update();
+            $followup->checkin_lat = $lat;
+            $followup->checkin_lng = $lng;
+            $followup->
 
             return response()->json([
-                'message'=>"Successfully Checkin"
-            ],200);
-        }
 
-        /*
-         * when we reach this state, we know that last_checkin is not null
-         * then it means, we need to check if last_checkout is null
-         * -->  if null, then it means, user hasn't checkout from previous customer before
-         * -->  if not null, then it means, we need to check whether the last_checkout is the "real" checkout action for the last_checkin
-         *
-         */
-        if($last_checkout==null){
-            return response()->json([
-                'message'=>'You haven\'t checkout from previous customer.'
-            ], 400);
+            ]);
         }
-
-        if($last_checkin->customer_id != $last_checkout->customer_id){
-            return response()->json([
-                "message"=>"You haven't checkout from previous customer."
-            ],400);
-        }
-
-        // here we check the last_checkin->date_time and last_checkout->date_time
-        if(strtotime($last_checkin->date_time)>strtotime($last_checkout->date_time)){
-            return response()->json([
-                'message'=>'You haven\'t checkout from previous customer.'
-            ],400);
-        }
-
-        $plan->checkin_lat = $lat;
-        $plan->checkin_lng = $lng;
-        $plan->address = $address;
-        $plan->start_time = $date_time;
-        $plan->status_done = 1;
-        if($request['customer_id']){
-            $plan->customer_id = $request['customer_id'];
-        }
-        $plan->update();
-
         return response()->json([
-            'message'=>"Successfully Checkin"
-        ],200);
+            'message'=>'start time is not null'
+        ]);
     }
 
 }

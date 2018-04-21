@@ -7,6 +7,7 @@ use App\FollowUp;
 use App\FollowUpCustomer;
 use App\ListPlan;
 use App\VisitPlan;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Pusher\PushNotifications\PushNotifications;
@@ -53,20 +54,32 @@ class PlanController extends Controller
      */
     public function getUserVisitPlans(Request $request){
         $this->validate($request,[
-            'valid_date'=>'required'
+            /*
+             * valid date is only monday date. (because every visit plan, will start on monday)
+             * in the front end, user will fetch monday date on specific year and month on DateController
+             *
+             */
+            'valid_date'=>'required|date_format:Y-m-d'
         ]);
         $user = $request->user();
 
-        $_plan = $user->visit_plans()->where('valid_date')->get();
+        $_plan = $user->visit_plans()->where('valid_date', $request['valid_date'])->get();
 
         return response()->json($_plan,200);
     }
 
     public function postUserVisitPlanList(Request $request){
+
+        /*
+         * changes: back then, we use week, month, year parameter to get visit plan list
+         * this can cause ambiguity and error in specific case. for example 30 april 2018
+         * 30 april is the last date of april. mean while the next visit plan list will be on may month
+         * it means, when we filter using week, month, year, it wont show the May visit plan list
+         */
         $this->validate($request,[
             'visit_plan_id'=>'required',
             'customer_id'=>'required',
-            'date_time'=>'required|date_format:Y-m-d',
+            'day'=>'required|integer|min:0|max:6',
             'type'=>'required|integer|min:0|max:1'
         ]);
 
@@ -82,14 +95,18 @@ class PlanController extends Controller
         }
 
         /*
-         * Before we create new plan, we check whether plans with request start_time and customer_id is exist or not (no same visit plan allowed on same day)
-         * TODO: tambahkan penjagaan apabila plan list yang dibuat di bawah hari dari visit plan atau di atas hari dari visit plan (harus berada dalam range 1 minggu)
+         * the way we save visit plan list date time is we get our visit plan valid_date (means where visit plan start/monday)
+         * then, we add the valid date with the day request data that we need
+         * the reason why day min allowed value is 0 is if we put min = 1, means when user send day=1
+         * we will set the visit plan list date time by adding the valid date with 1 (means it will be tomorrow after the valid date
+         * in other word, we will never able to set plan list on the first day of our visit plan (on the valid date which is monday)
+         * thats why we set 0 as min value  and 6 as max value (if we plus 6, day will be on sunday)
          */
-        if($visit_plan->list_plans->where('date_time', $request['date_time'])->where('customer_id',$request['customer_id'])->first()==null){
+        if($visit_plan->list_plans->where('date_time',Carbon::createFromFormat('Y-m-d',$visit_plan->valid_date)->addDays($request['day'])->toDateString())->where('customer_id',$request['customer_id'])->first()==null){
             $plan = new ListPlan();
             $plan->visit_plan_id = $request['visit_plan_id'];
             $plan->customer_id = $request['customer_id'];
-            $plan->date_time = $request['date_time'];
+            $plan->date_time = Carbon::createFromFormat('Y-m-d',$visit_plan->valid_date)->addDays($request['day'])->toDateString();
             $plan->type = $request['type'];
             $plan->save();
 
@@ -104,8 +121,17 @@ class PlanController extends Controller
 
     public function getUserVisitPlanList(Request $request, $id){
 
+        /*
+         * same rule apply on get user visit plan list
+         * we set min value to 0 and max value to 6
+         *
+         * to get user visit plan on specific date,
+         * we do exactly same thing on post visit plan list
+         * we add day to the visit plan valid date
+         *
+         */
         $this->validate($request, [
-            'date_time'=>'required|date_format:Y-m-d',
+            'day'=>'required|integer|min:0|max:6',
         ]);
 
         $visit_plan = $request->user()->visit_plans()->find($id);
@@ -120,7 +146,7 @@ class PlanController extends Controller
          *
          * return format is array
          */
-        $plan_list = $visit_plan->list_plans()->where('date_time', $request['date_time'])->get();
+        $plan_list = $visit_plan->list_plans()->where('date_time', Carbon::createFromFormat('Y-m-d', $visit_plan->valid_date)->addDays($request['day'])->toDateString())->get();
 
         return response($plan_list, 200);
     }
@@ -158,7 +184,7 @@ class PlanController extends Controller
             'id'=>'required', //plan list id
             'visit_plan_id'=>'required',
             'customer_id'=>'required',
-            'date_time'=>'required|date_format:Y-m-d',
+            'day'=>'required|min=0|max=6',
             'type'=>'required|integer|min:0|max:1'
         ]);
 
@@ -189,11 +215,22 @@ class PlanController extends Controller
             ],404);
         }
 
-        if($visit_plan->list_plans->where('start_time', $request['start_time'])->where('customer_id',$request['customer_id'])->first()==null){
+        /*
+         * when user wants to edit the visit plan list,
+         * we have to recheck if the plan with exact starttime and customer id is exist
+         * if it is exist, then show error message;
+         * if not, update the plan
+         */
+        if($visit_plan->list_plans->where('date_time',  Carbon::createFromFormat('Y-m-d', $visit_plan->valid_date)->addDays($request['day'])->toDateString())->where('customer_id',$request['customer_id'])->first()==null){
 
+            /*
+             * here, we dont have to set date_time value to the plan
+             * because it will still remain the same
+             * it happens because we planning to make user unable to change plan list date when they want to edit the plan
+             * if the want to move it to other day, then delete the old one and add new one to specific day that they want.
+             */
             $plan->visit_plan_id = $request['visit_plan_id'];
             $plan->customer_id = $request['customer_id'];
-            $plan->date_time = $request['date_time'];
             $plan->type = $request['type'];
             $plan->update();
 
@@ -280,6 +317,9 @@ class PlanController extends Controller
         $title = 'Asking for approval';
         $body = $user->name . ' is asking for visit plan approval!';
 
+        /*
+         * we send this reponse to user to indicates if the asking for approval method work properly
+         */
         if($visit_plan->update()){
             return self::sendNotification($channel_name, $user->group->leader()->role_id, $title, $body);
         }
@@ -290,6 +330,7 @@ class PlanController extends Controller
 
     public function postFollowUp(Request $request){
         $this->validate($request, [
+            'name'=>'required',
             'address'=>'required',
             'date_time'=>'required',
         ]);
@@ -297,6 +338,7 @@ class PlanController extends Controller
         $user = $request->user();
         $follow_up = new FollowUp();
         $follow_up->user_id = $user->id;
+        $follow_up->name = $request['name'];
         $follow_up->address = $request['address'];
         $follow_up->date_time = $request['date_time'];
 
@@ -310,7 +352,7 @@ class PlanController extends Controller
     public function postFollowUpCustomer(Request $request){
         $this->validate($request,[
             'date_time'=>'required',
-            'customer_id'=>'customer_id'
+            'customer_id'=>'required'
         ]);
 
         $user = $request->user();
@@ -337,8 +379,8 @@ class PlanController extends Controller
         ]);
 
         if($request['status'] == 'active'){
-            $follow_ups = $request->user()->follow_ups()->where('status_done',0)->get();
-            $follow_up_customers = $request->user()->follow_up_customers()->where('status_done',0)->get();
+            $follow_ups = $request->user()->follow_ups()->where('status_done',[0,1])->get();
+            $follow_up_customers = $request->user()->follow_up_customers()->where('status_done',[0,1])->get();
 
             foreach($follow_up_customers as $item){
                 $item->customer = Customer::find($item->customer_id);
@@ -350,8 +392,8 @@ class PlanController extends Controller
         }
 
         else if($request['status']=='history'){
-            $follow_ups = $request->user()->follow_ups()->where('status_done',1);
-            $follow_up_customers = $request->user()->follow_up_customers()->where('status_done',1);
+            $follow_ups = $request->user()->follow_ups()->where('status_done',2)->get();
+            $follow_up_customers = $request->user()->follow_up_customers()->where('status_done',2)->get();
 
             foreach($follow_up_customers as $item){
                 $item->customer = Customer::find($item->customer_id);
@@ -369,8 +411,8 @@ class PlanController extends Controller
 
     public function sendNotification($channel_name, $role_id, $title, $body){
         $pushNotification = new PushNotifications(array(
-            "instanceId" => "8402f9d4-872e-4ed8-9f9a-f9fffd742db3",
-            "secretKey"=>"13785DC78D0EA21BB02B35C13DD3F1A",
+            "instanceId" => "8d1eb444-d7c9-45d6-95a3-cbe1ab9d7253",
+            "secretKey"=>"01A6D13F48BECE00 D27216C5FD8A0DF",
         ));
 
         $publishResponse = $pushNotification->publish(

@@ -19,8 +19,10 @@ class CreateFollowUpCustomersTable extends Migration
             $table->unsignedInteger('customer_id');
             $table->double('checkin_lat')->nullable();
             $table->double('checkin_lng')->nullable();
+            $table->string('checkin_address')->nullable();
             $table->double('checkout_lat')->nullable();
             $table->double('checkout_lng')->nullable();
+            $table->string('checkout_address')->nullable();
             $table->unsignedInteger('status_done')->default(0);
             $table->date('date_time');
             $table->dateTime('start_time')->nullable();
