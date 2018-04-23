@@ -10,6 +10,7 @@ use App\Customer;
 use App\FollowUp;
 use App\FollowUpCustomer;
 use App\ListPlan;
+use App\Verification;
 use App\VisitPlan;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
@@ -613,12 +614,16 @@ class CustomerController extends Controller
         ],400);
     }
 
-    public function verifyVisitPlan(Request $request){
-        $this->validate($request, [
-            'id'=>'request',
-
-        ]);
 
 
-    }
+
+//    //for director
+//    public function getVerification(Request $request){
+//        $this->validate($request, [
+//            'month'=>'required|integer|min:1|max:12',
+//            'year'=>'required|integer'
+//        ]);
+//
+//        $verification =
+//    }
 }
