@@ -30,6 +30,7 @@ class PlanController extends Controller
          * $_plan is array format
          */
         $_plan = $user->visit_plans()->where('valid_date',$request['valid_date'])->get()->toArray();
+        $time = Carbon::createFromFormat('Y-m-d', $request['valid_date']);
 
         if(!empty($_plan)){
             return response()->json([
@@ -40,6 +41,8 @@ class PlanController extends Controller
         $plan = new VisitPlan();
         $plan->user_id = $user->id;
         $plan->valid_date = $request['valid_date'];
+        $plan->valid_month = $time->month;
+        $plan->valid_year = $time->year;
         $plan->save();
 
         return response()->json([
@@ -474,7 +477,7 @@ class PlanController extends Controller
     public function sendNotification($channel_name, $role_id, $title, $body){
         $pushNotification = new PushNotifications(array(
             "instanceId" => "8d1eb444-d7c9-45d6-95a3-cbe1ab9d7253",
-            "secretKey"=>"01A6D13F48BECE00 D27216C5FD8A0DF",
+            "secretKey"=>"01A6D13F48BECE00D27216C5FD8A0DF",
         ));
 
         $publishResponse = $pushNotification->publish(
