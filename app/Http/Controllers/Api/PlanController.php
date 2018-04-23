@@ -41,8 +41,8 @@ class PlanController extends Controller
         $plan = new VisitPlan();
         $plan->user_id = $user->id;
         $plan->valid_date = $request['valid_date'];
-        $plan->valid_month = $time->month;
-        $plan->valid_year = $time->year;
+//        $plan->valid_month = $time->month;
+//        $plan->valid_year = $time->year;
         $plan->save();
 
         return response()->json([
