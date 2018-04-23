@@ -20,6 +20,7 @@ Route::get('/fecthsalesperson', 'Api\FetchController@fecthSalesPerson');
 Route::get('/fetchcustomer', 'Api\FetchController@fetchCustomer');
 Route::get('/fetchcustomerarea', 'Api\FetchController@fetchCustomerArea');
 Route::get('/firstmonday','Api\DateController@getMondays');
+Route::get('/testing', 'Api\ManagerController@getSalesmanVisitPlan');
 
 
 
@@ -45,6 +46,9 @@ Route::middleware('auth:api')->group(function(){
     Route::post('/followupcustomer', 'Api\PlanController@postFollowUpCustomer');
     Route::post('/followup/report', 'Api\PlanController@saveVisitPlanReport');
     Route::post('/followupcustomer/report', 'Api\PlanController@saveFollowUpReport');
+
+    Route::get('/salesman/visitplan', 'Api\ManagerController@getSalesmanVisitPlan');
+    Route::post('/salesman/visitplan/verification', 'Api\ManagerController@verifyVisitPlan');
 
     /*
      * CHECKIN CHECKOUT
