@@ -108,6 +108,9 @@ class PlanController extends Controller
             $plan->customer_id = $request['customer_id'];
             $plan->date_time = Carbon::createFromFormat('Y-m-d',$visit_plan->valid_date)->addDays($request['day'])->toDateString();
             $plan->type = $request['type'];
+            if($request['description']){
+                $plan->description = $request['description'];
+            }
             $plan->save();
 
             return response()->json([
@@ -185,7 +188,7 @@ class PlanController extends Controller
             'visit_plan_id'=>'required',
             'customer_id'=>'required',
             'day'=>'required|min=0|max=6',
-            'type'=>'required|integer|min:0|max:1'
+            'type'=>'required|integer|min:0|max:1',
         ]);
 
         $visit_plan = $request->user()->visit_plans()->find($request['visit_plan_id']);
@@ -232,6 +235,11 @@ class PlanController extends Controller
             $plan->visit_plan_id = $request['visit_plan_id'];
             $plan->customer_id = $request['customer_id'];
             $plan->type = $request['type'];
+
+            if($request['description']){
+                $plan->description = $request['description'];
+            }
+
             $plan->update();
 
             return response()->json([
@@ -243,14 +251,13 @@ class PlanController extends Controller
         ]);
     }
 
-    public function deleteUserVisitPlanList(Request $request){
+    public function deleteUserVisitPlanList(Request $request, $id){
         $this->validate($request,[
-            'id'=>'required',
             'visit_plan_id'=>'required'
         ]);
 
         $visit_plan = $request->user()->visit_plans()->find($request['visit_plan_id']);
-        $plan = $visit_plan->list_plans->find($request['id']);
+        $plan = $visit_plan->list_plans->find($id);
 
         if($visit_plan == null){
             return response()->json([
@@ -342,8 +349,11 @@ class PlanController extends Controller
         $follow_up->address = $request['address'];
         $follow_up->date_time = $request['date_time'];
 
-        $follow_up->save();
+        if($request['description']){
+            $follow_up->description = $request['description'];
+        }
 
+        $follow_up->save();
         return response()->json([
             'message'=>'Follow up end-user successfully created.'
         ]);
@@ -352,7 +362,7 @@ class PlanController extends Controller
     public function postFollowUpCustomer(Request $request){
         $this->validate($request,[
             'date_time'=>'required',
-            'customer_id'=>'required'
+            'customer_id'=>'required',
         ]);
 
         $user = $request->user();
@@ -361,6 +371,11 @@ class PlanController extends Controller
             $follow_up_customer->user_id = $user->id;
             $follow_up_customer->customer_id = $request['customer_id'];
             $follow_up_customer->date_time = $request['date_time'];
+
+            if($request['description']){
+                $follow_up_customer->description = $request['description'];
+            }
+
             $follow_up_customer->save();
 
             return response()->json([
@@ -376,11 +391,12 @@ class PlanController extends Controller
     public function getFollowUp(Request $request){
         $this->validate($request, [
             'status'=>'required',
+            'date_time'=>'required',
         ]);
 
         if($request['status'] == 'active'){
-            $follow_ups = $request->user()->follow_ups()->where('status_done',[0,1])->get();
-            $follow_up_customers = $request->user()->follow_up_customers()->where('status_done',[0,1])->get();
+            $follow_ups = $request->user()->follow_ups()->whereIn('status_done',[0,1])->where('date_time', $request['date_time'])->get();
+            $follow_up_customers = $request->user()->follow_up_customers()->whereIn('status_done',[0,1])->where('date_time', $request['date_time'])->get();
 
             foreach($follow_up_customers as $item){
                 $item->customer = Customer::find($item->customer_id);
@@ -392,8 +408,8 @@ class PlanController extends Controller
         }
 
         else if($request['status']=='history'){
-            $follow_ups = $request->user()->follow_ups()->where('status_done',2)->get();
-            $follow_up_customers = $request->user()->follow_up_customers()->where('status_done',2)->get();
+            $follow_ups = $request->user()->follow_ups()->where('status_done',2)->where('date_time', $request['date_time'])->get();
+            $follow_up_customers = $request->user()->follow_up_customers()->where('status_done',2)->where('date_time', $request['date_time'])->get();
 
             foreach($follow_up_customers as $item){
                 $item->customer = Customer::find($item->customer_id);
@@ -409,6 +425,52 @@ class PlanController extends Controller
         ],200);
     }
 
+    public function saveVisitPlanReport(Request $request){
+        $this->validate($request, [
+            'id' => 'required',
+            'report'=>'required'
+        ]);
+        $user = $request->user();
+        $plan = $user->visit_plans()->find($request['id']);
+
+        if($plan ==  null){
+            return response()->json([
+                'messsage'=>'Plan id is not found.'
+            ],404);
+        }
+
+        $plan->report = $request['report'];
+        $plan->update();
+
+        return response()->json([
+            'message'=>'Report successfully saved'
+        ],200);
+    }
+
+    public function saveFollowUpReport(Request $request){
+        $this->validate($request,[
+            'id'=>'required',
+            'report'=>'required'
+        ]);
+        $user = $request->user();
+        $plan = $user->visit_plans()->find($request['id']);
+
+        if($plan ==  null){
+            return response()->json([
+                'messsage'=>'Plan id is not found.'
+            ],404);
+        }
+
+        $plan->report = $request['report'];
+        $plan->update();
+
+        return response()->json([
+            'message'=>'Report successfully saved'
+        ],200);
+    }
+
+
+
     public function sendNotification($channel_name, $role_id, $title, $body){
         $pushNotification = new PushNotifications(array(
             "instanceId" => "8d1eb444-d7c9-45d6-95a3-cbe1ab9d7253",
@@ -418,11 +480,6 @@ class PlanController extends Controller
         $publishResponse = $pushNotification->publish(
             array( $channel_name . $role_id), //this is the channel where the notification will be send
             array(
-                "apns" => array("aps" => array(
-                    "alert" => "Hello!",
-                )),
-
-                //on our case, we use fcm format..
                 "fcm" => array("notification" => array(
                     "title" => $title,
                     "body" => $body,

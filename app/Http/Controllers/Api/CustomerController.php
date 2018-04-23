@@ -485,11 +485,9 @@ class CustomerController extends Controller
 
     public function followUpCheckin(Request $request){
         $this->validate($request, [
-//            'customer_id'=>'required',
             'lat'=>'required',
             'lng'=>'required',
             'address'=>'required',
-            'date_time'=>'required|date_format:Y-m-d',
             'start_time'=>'required|date_format:Y-m-d H:i:s', // i in this case is minute
             'followup_id'=>'required',
             'type'=>'required|integer|min:0|max:1'
@@ -498,7 +496,6 @@ class CustomerController extends Controller
         $lat = $request['lat'];
         $lng = $request['lng'];
         $address = $request['address'];
-        $date_time = $request['date_time'];
         $followup_id = $request['followup_id'];
         $type = $request['type'];
 
@@ -516,26 +513,112 @@ class CustomerController extends Controller
         if($followup== null){
             return response()->json([
                 'message' => 'Plan not found'
-            ]);
+            ],404);
         }
 
         /*
-         * testing
-         * TODO:: delete this
+         * -->  if user start_time is null
+         *      check the end time first,
+         *      --> if the both start time and end time is null
+         *          then save checkin
+         *      --> else (if start_time is null but end end time is not null)
+         *          send error message
+         * -->  if user start_time is not null
+         *      means user has sign in to this place
+         *      then send error message
+         *
+         * if user end_time
+         *
          */
         if($followup->start_time==null){
+            if($followup->end_time==null){
+                $followup->checkin_lat = $lat;
+                $followup->checkin_lng = $lng;
+                $followup->checkin_address = $address;
+                $followup->start_time = $request['start_time'];
+                $followup->status_done = 1; //Checkin
+                $followup->save();
 
-            $followup->checkin_lat = $lat;
-            $followup->checkin_lng = $lng;
-            $followup->
-
+                return response()->json([
+                    'message'=>'Successfully Checkin.'
+                ],200);
+            }
             return response()->json([
-
-            ]);
+                'message'=>'Failed to Checkin.'
+            ],400);
         }
         return response()->json([
-            'message'=>'start time is not null'
-        ]);
+            'message'=>'Failed to Checkin.'
+        ],400);
     }
 
+    public function followUpCheckout(Request $request){
+        $this->validate($request, [
+            'lat'=>'required',
+            'lng'=>'required',
+            'address'=>'required',
+            'end_time'=>'required|date_format:Y-m-d H:i:s', // i in this case is minute
+            'followup_id'=>'required',
+            'type'=>'required|integer|min:0|max:1'
+        ]);
+
+        $lat = $request['lat'];
+        $lng = $request['lng'];
+        $address = $request['address'];
+        $followup_id = $request['followup_id'];
+        $type = $request['type'];
+
+        /*
+        * 0: Means followup end user
+        * 1: Means followup customer
+        */
+        if($type==0){
+            $followup = FollowUp::find($followup_id);
+        }
+        else{
+            $followup = FollowUpCustomer::find($followup_id);
+        }
+
+        if($followup== null){
+            return response()->json([
+                'message' => 'Plan not found'
+            ],404);
+        }
+
+        if($followup->start_time==null){
+            return response()->json([
+                'message'=>'You haven\'t checkin to this place.'
+            ],400);
+        }
+
+        if($followup->end_time==null){
+            $followup->checkout_lat = $lat;
+            $followup->checkout_lng = $lng;
+            $followup->checkout_address = $address;
+            $followup->finish_time = $request['end_time'];
+            $followup->status_done = 2; //checkout
+            $followup->status_color = 1; //done color: green (in report, color will be represent as gray)
+            $followup->update();
+
+            return response()->json([
+                'message'=>'Successfully Checkout.'
+            ],200);
+        }
+        /*
+         * if end time is not null means this user has checkout (and then he checkout again)
+         * thats why we send error message
+         */
+        return response()->json([
+            'message'=>'Failed to Checkin.'
+        ],400);
+    }
+
+    public function verifyVisitPlan(Request $request){
+        $this->validate($request, [
+            'id'=>'request',
+
+        ]);
+
+
+    }
 }

@@ -34,14 +34,17 @@ Route::middleware('auth:api')->group(function(){
      */
     Route::post('/add-plan','Api\PlanController@postVisitPlan');
     Route::get('/visitplan','Api\PlanController@getUserVisitPlans');
-    Route::post('/visitplan/delete','Api\PlanController@updateUserVisitPlan');
+    Route::post('/visitplan/delete','Api\PlanController@deleteUserVisitPlan');
     Route::post('/visitplan/approval','Api\PlanController@postAskForApproval');
 
     Route::post('/visitplan/plan-list', 'Api\PlanController@postUserVisitPlanList');
     Route::get('/visitplan/{id}/plan-list','Api\PlanController@getUserVisitPlanList');
+    Route::post('/visitplan/plan-list/{id}/delete','Api\PlanController@deleteUserVisitPlanList');
 
     Route::post('/followup', 'Api\PlanController@postFollowUp');
     Route::post('/followupcustomer', 'Api\PlanController@postFollowUpCustomer');
+    Route::post('/followup/report', 'Api\PlanController@saveVisitPlanReport');
+    Route::post('/followupcustomer/report', 'Api\PlanController@saveFollowUpReport');
 
     /*
      * CHECKIN CHECKOUT

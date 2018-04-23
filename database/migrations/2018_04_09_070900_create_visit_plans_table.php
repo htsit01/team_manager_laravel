@@ -18,6 +18,7 @@ class CreateVisitPlansTable extends Migration
             $table->unsignedInteger('user_id');
             $table->date('valid_date');
             $table->unsignedInteger('status')->nullable();//default: null, 0 pending, 1 rejected, 2 accepted
+            $table->unsignedInteger('is_verify')->default(0); // status indicate if this visit plan is verified by manager or not
             $table->timestamps();
 
             $table->foreign('user_id')

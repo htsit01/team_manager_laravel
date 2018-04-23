@@ -23,6 +23,7 @@ class CreateListPlansTable extends Migration
             $table->dateTime('finish_time')->nullable();
             $table->unsignedInteger('type');  //0 daily 1 weekly
             $table->unsignedInteger('status_color')->default(0); //0: red 1: green 2:orange 3: gray
+            $table->string('description')->nullable();
             $table->string('report')->nullable();
             $table->timestamps();
 
