@@ -19,14 +19,14 @@ Route::get('/fetchcustomertype', 'Api\FetchController@fetchCustomerType');
 Route::get('/fecthsalesperson', 'Api\FetchController@fecthSalesPerson');
 Route::get('/fetchcustomer', 'Api\FetchController@fetchCustomer');
 Route::get('/fetchcustomerarea', 'Api\FetchController@fetchCustomerArea');
-Route::get('/firstmonday','Api\DateController@getMondays');
-Route::get('/testing', 'Api\ManagerController@getSalesmanVisitPlan');
 
+Route::get('/firstmonday','Api\DateController@getMondays');
 
 
 Route::middleware('auth:api')->group(function(){
     Route::get('/all-locations','Api\LocationController@getAllLastLocation');
     Route::get('/location-history/{id}','Api\LocationController@getLocationHistory');
+    Route::get('/user','Api\UserController@getUser');
 
     Route::post('/store-location','Api\LocationController@postUserLocation');
 
@@ -48,7 +48,18 @@ Route::middleware('auth:api')->group(function(){
     Route::post('/followupcustomer/report', 'Api\PlanController@saveFollowUpReport');
 
     Route::get('/salesman/visitplan', 'Api\ManagerController@getSalesmanVisitPlan');
+    Route::get('/salesman/pendingvisitplan', 'Api\ManagerController@getPendingVisitPlan');
+
+
+    /*
+     * VERIFICATION
+     */
     Route::post('/salesman/visitplan/verification', 'Api\ManagerController@verifyVisitPlan');
+    Route::get('/manager/verification','Api\DirectorController@getManagerVerification');
+
+
+
+
 
     /*
      * CHECKIN CHECKOUT

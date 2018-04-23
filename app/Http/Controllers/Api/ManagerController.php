@@ -49,7 +49,11 @@ class ManagerController extends Controller
         }
     }
 
-    //manager
+    /*
+     *  this function is for manager to fetch all salesman visit plan
+     *  this function is used when manager want to verify salesman.
+     *
+     */
 
     public function getSalesmanVisitPlan(Request $request)
     {
@@ -61,18 +65,40 @@ class ManagerController extends Controller
         $month = $request['month'];
         $year = $request['year'];
 
-        $visitplan = DB::table('visit_plans')
+        $visitplans = DB::table('visit_plans')
             ->whereMonth('valid_date', $month)
             ->whereYear('valid_date', $year)
+            ->where('status', 2) //means accepted
             ->get();
 
-        foreach ($visitplan as $item){
-            $item->user = User::find($item->user_id);
+        foreach ($visitplans as $item){
+            $item->user = User::find($item->user_id)->name;
         }
 
-        return response()->json($visitplan, 200);
+        return response()->json($visitplans, 200);
     }
 
+    public function getPendingVisitPlan(Request $request){
+        $this->validate($request,[
+            'valid_date'=>'required|date_format:Y-m-d'
+        ]);
+
+        $valid_date = $request['valid_date'];
+
+        $visitplans = DB::table('visit_plans')
+            ->where('valid_date', $valid_date)
+            ->where('status', 0) //means pending
+            ->get();
+
+        foreach($visitplans as $item){
+            $item->user = User::find($item->user_id)->name;
+        }
+
+        return response()->json($visitplans, 200);
+    }
+
+
+    //this function is used to send notification.
     public function sendNotification($channel_name,$title, $body){
         $pushNotification = new PushNotifications(array(
             "instanceId" => "8d1eb444-d7c9-45d6-95a3-cbe1ab9d7253",
