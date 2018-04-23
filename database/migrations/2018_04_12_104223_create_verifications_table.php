@@ -33,8 +33,8 @@ class CreateVerificationsTable extends Migration
             $table->unsignedInteger('visit_plan_id');
             $table->unsignedInteger('user_id');
             $table->dateTime('date_time');
-            $table->unsignedInteger('is_seen');
-            $table->unsignedInteger('is_verify'); //change status when manager verify
+            $table->unsignedInteger('is_seen')->default(0);
+            $table->timestamps();
 
             $table->foreign('visit_plan_id')
                 ->references('id')
