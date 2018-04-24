@@ -30,7 +30,7 @@ class PlanController extends Controller
          * $_plan is array format
          */
         $_plan = $user->visit_plans()->where('valid_date',$request['valid_date'])->get()->toArray();
-        $time = Carbon::createFromFormat('Y-m-d', $request['valid_date']);
+//        $time = Carbon::createFromFormat('Y-m-d', $request['valid_date']);
 
         if(!empty($_plan)){
             return response()->json([
@@ -66,9 +66,11 @@ class PlanController extends Controller
         ]);
         $user = $request->user();
 
-        $_plan = $user->visit_plans()->where('valid_date', $request['valid_date'])->get();
+        $plan = $user->visit_plans()->where('valid_date', $request['valid_date'])->withCount('list_plans as numb_of_plans')->withCount(array('list_plans as numb_of_done'=>function($query){
+            $query->where('status_done',2);
+        }))->get();
 
-        return response()->json($_plan,200);
+        return response()->json($plan,200);
     }
 
     public function postUserVisitPlanList(Request $request){
@@ -154,6 +156,10 @@ class PlanController extends Controller
          */
         $plan_list = $visit_plan->list_plans()->where('date_time', Carbon::createFromFormat('Y-m-d', $visit_plan->valid_date)->addDays($request['day'])->toDateString())->get();
 
+        foreach ($plan_list as $item){
+            $item->customer = Customer::find($item->customer_id);
+        }
+
         return response($plan_list, 200);
     }
 
@@ -166,13 +172,13 @@ class PlanController extends Controller
         if($visit_plan==null){
             return response()->json([
                 'message'=>'Visit plan id not found.'
-            ]);
+            ],400);
         }
 
         if($visit_plan->status==2){
             return response()->json([
                 'message'=>'Visit Plan that has been approved cannot be edited anymore. '
-            ],200);
+            ],400);
         }
 
         if($visit_plan->delete()){
