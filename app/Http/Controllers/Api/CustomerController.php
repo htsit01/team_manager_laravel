@@ -7,6 +7,7 @@ use App\CheckOut;
 use App\CreditForm;
 use App\CreditFormSupplier;
 use App\Customer;
+use App\CustomerArea;
 use App\FollowUp;
 use App\FollowUpCustomer;
 use App\ListPlan;
@@ -614,8 +615,19 @@ class CustomerController extends Controller
         ],400);
     }
 
+    public function getCustomerAreas(){
+        $customer_areas = CustomerArea::all();
 
+        return response()->json($customer_areas,200);
+    }
 
+    public function getCustomers(){
+        $customers = Customer::all();
+
+        return response()->json($customers, 200);
+    }
+
+    
 
 //    //for director
 //    public function getVerification(Request $request){

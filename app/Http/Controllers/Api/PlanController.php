@@ -191,17 +191,17 @@ class PlanController extends Controller
         ],400);
     }
 
-    public function updateUserVisitPlanList(Request $request){
+    public function updateUserVisitPlanList(Request $request, $id){
         $this->validate($request, [
-            'id'=>'required', //plan list id
             'visit_plan_id'=>'required',
             'customer_id'=>'required',
-            'day'=>'required|min=0|max=6',
+            'day'=>'required|min:0|max:6',
             'type'=>'required|integer|min:0|max:1',
         ]);
 
+
         $visit_plan = $request->user()->visit_plans()->find($request['visit_plan_id']);
-        $plan = $visit_plan->list_plans->find($request['id']);
+        $plan = $visit_plan->list_plans->find($id);
 
         /*
          * First, we check if visit_plan is exist
