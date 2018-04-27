@@ -494,7 +494,7 @@ class CustomerController extends Controller
             'followup_id'=>'required',
             'type'=>'required|integer|min:0|max:1'
         ]);
-
+        $user = $request->user();
         $lat = $request['lat'];
         $lng = $request['lng'];
         $address = $request['address'];
@@ -506,10 +506,10 @@ class CustomerController extends Controller
         * 1: Means followup customer
         */
         if($type==0){
-            $followup = FollowUp::find($followup_id);
+            $followup = $user->follow_ups()->find($followup_id);
         }
         else{
-            $followup = FollowUpCustomer::find($followup_id);
+            $followup = $user->follow_up_customers()->find($followup_id);
         }
 
         if($followup== null){
@@ -564,6 +564,7 @@ class CustomerController extends Controller
             'type'=>'required|integer|min:0|max:1'
         ]);
 
+        $user = $request->user();
         $lat = $request['lat'];
         $lng = $request['lng'];
         $address = $request['address'];
@@ -575,10 +576,10 @@ class CustomerController extends Controller
         * 1: Means followup customer
         */
         if($type==0){
-            $followup = FollowUp::find($followup_id);
+            $followup = $user->follow_ups()->find($followup_id);
         }
         else{
-            $followup = FollowUpCustomer::find($followup_id);
+            $followup = $user->follow_up_customers()->find($followup_id);
         }
 
         if($followup== null){

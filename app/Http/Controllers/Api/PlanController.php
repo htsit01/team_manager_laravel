@@ -348,7 +348,7 @@ class PlanController extends Controller
         $this->validate($request, [
             'name'=>'required',
             'address'=>'required',
-            'date_time'=>'required',
+            'date_time'=>'required|date_format:Y-m-d',
         ]);
 
         $user = $request->user();
@@ -370,7 +370,7 @@ class PlanController extends Controller
 
     public function postFollowUpCustomer(Request $request){
         $this->validate($request,[
-            'date_time'=>'required',
+            'date_time'=>'required|date_format:Y-m-d',
             'customer_id'=>'required',
         ]);
 
@@ -434,17 +434,26 @@ class PlanController extends Controller
         ],200);
     }
 
-    public function saveVisitPlanReport(Request $request){
+    public function saveVisitPlanReport(Request $request, $id){
         $this->validate($request, [
-            'id' => 'required',
+            'visit_plan_id'=>'required',
             'report'=>'required'
         ]);
+        $visit_plan_id = $request['visit_plan_id'];
         $user = $request->user();
-        $plan = $user->visit_plans()->find($request['id']);
+        $visit_plan = $user->visit_plans()->find($visit_plan_id);
 
-        if($plan ==  null){
+        if($visit_plan ==  null){
             return response()->json([
-                'messsage'=>'Plan id is not found.'
+                'messsage'=>'Visit plan id is not found.'
+            ],404);
+        }
+
+        $plan = $visit_plan->list_plans()->find($id);
+
+        if($plan==null){
+            return response()->json([
+                'message'=>'Plan id is not found.'
             ],404);
         }
 
@@ -458,24 +467,64 @@ class PlanController extends Controller
 
     public function saveFollowUpReport(Request $request){
         $this->validate($request,[
-            'id'=>'required',
-            'report'=>'required'
+            'followup_id'=>'required',
+            'report'=>'required',
+            'type'=>'required' //0 followup 1 followupcustomer
         ]);
         $user = $request->user();
-        $plan = $user->visit_plans()->find($request['id']);
 
-        if($plan ==  null){
+        $followup_id  = $request['followup_id'];
+        $type = $request['type'];
+
+        if($type==0){
+            $followup = $user->follow_ups()->find($followup_id);
+        }
+        else{
+            $followup = $user->follow_up_customers()->find($followup_id);
+        }
+
+        if($followup ==  null){
             return response()->json([
                 'messsage'=>'Plan id is not found.'
             ],404);
         }
 
-        $plan->report = $request['report'];
-        $plan->update();
+        $followup->report = $request['report'];
+        $followup->update();
 
         return response()->json([
             'message'=>'Report successfully saved'
         ],200);
+    }
+
+    public function deleteFollowUp(Request $request){
+        $this->validate($request, [
+            'followup_id'=>'required',
+            'type'=>'required',
+        ]);
+
+        $user = $request->user();
+        $followup_id = $request['followup_id'];
+        $type = $request['type'];
+
+        if($type==0){
+            $followup = $user->follow_ups()->find($followup_id);
+        }
+        else{
+            $followup = $user->follow_up_customers()->find($followup_id);
+        }
+
+        if($followup==null){
+            return response()->json([
+                'message'=>'Follow up id not found.'
+            ],404);
+        }
+
+        $followup->delete();
+
+        return response()->json([
+            'message' => 'Follow up successfully deleted.'
+        ]);
     }
 
 

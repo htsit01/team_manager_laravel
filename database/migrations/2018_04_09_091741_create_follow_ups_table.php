@@ -28,7 +28,7 @@ class CreateFollowUpsTable extends Migration
             $table->date('date_time');
             $table->dateTime('start_time')->nullable();
             $table->dateTime('finish_time')->nullable();
-            $table->unsignedInteger('stadtus_color')->default(0);
+            $table->unsignedInteger('status_color')->default(0);
             $table->string('description')->nullable();
             $table->string('report')->nullable();
             $table->timestamps();

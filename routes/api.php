@@ -49,11 +49,11 @@ Route::middleware('auth:api')->group(function(){
     Route::get('visitplan/{id}/plan-list','Api\PlanController@getUserVisitPlanList');
     Route::post('visitplan/plan-list/{id}/delete','Api\PlanController@deleteUserVisitPlanList');
     Route::post('visitplan/plan-list/{id}/update','Api\PlanController@updateUserVisitPlanList');
+    Route::post('visitplan/plan-list/{id}/report', 'Api\PlanController@saveVisitPlanReport');
 
     Route::post('followup', 'Api\PlanController@postFollowUp');
     Route::post('followupcustomer', 'Api\PlanController@postFollowUpCustomer');
-    Route::post('followup/report', 'Api\PlanController@saveVisitPlanReport');
-    Route::post('followupcustomer/report', 'Api\PlanController@saveFollowUpReport');
+    Route::post('followup/report', 'Api\PlanController@saveFollowUpReport');
 
     Route::get('salesman/visitplan', 'Api\ManagerController@getSalesmanVisitPlan');
     Route::get('salesman/pendingvisitplan', 'Api\ManagerController@getPendingVisitPlan');
@@ -79,6 +79,11 @@ Route::middleware('auth:api')->group(function(){
     Route::post('followup/post','Api\PlanController@postFollowUp');
     Route::post('followupcustomer/post','Api\PlanController@postFollowUpCustomer');
     Route::get('allfollowup','Api\PlanController@getFollowUp');
+    Route::post('followup/delete', 'Api\PlanController@deleteFollowUp');
+
+    /*
+     * Customers
+     */
     Route::get('customerareas', 'Api\CustomerController@getCustomerAreas');
     Route::get('customers', 'Api\CustomerController@getCustomers');
 });
