@@ -16,8 +16,8 @@ class UsersDatabaseSeeder extends Seeder
         $user->name = "User Satu";
         $user->email = "user1@gmail.com";
         $user->password = bcrypt('secret');
-        $user->mac_address = "00:00:00:01";
-        $user->role_id = 1;
+        $user->mac_address = "02:00:00:44:55:66";
+        $user->role_id = 2;
         $user->group_id = 1;
         $user->code="US";
         $user->phone="0215546662";
@@ -28,7 +28,7 @@ class UsersDatabaseSeeder extends Seeder
         $user->email = "user2@gmail.com";
         $user->password = bcrypt('secret');
         $user->mac_address = "00:00:00:02";
-        $user->role_id = 2;
+        $user->role_id = 5;
         $user->group_id = 1;
         $user->code="US";
         $user->phone="0215546662";
@@ -52,7 +52,7 @@ class UsersDatabaseSeeder extends Seeder
         $user->email = "user4@gmail.com";
         $user->password = bcrypt('secret');
         $user->mac_address = "00:00:00:04";
-        $user->role_id = 5;
+        $user->role_id = 2;
         $user->group_id = 2;
         $user->code="US";
         $user->phone="0215546662";

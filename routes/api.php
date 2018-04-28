@@ -30,6 +30,8 @@ Route::middleware('auth:api')->group(function(){
      */
     Route::get('user','Api\UserController@getUser');
 
+    Route::post('logout', 'Api\AuthController@postLogout');
+
     /*
      * LOCATION ROUTE
      */
@@ -55,9 +57,9 @@ Route::middleware('auth:api')->group(function(){
     Route::post('followupcustomer', 'Api\PlanController@postFollowUpCustomer');
     Route::post('followup/report', 'Api\PlanController@saveFollowUpReport');
 
-    Route::get('salesman/visitplan', 'Api\ManagerController@getSalesmanVisitPlan');
+    Route::get('salesman/visitplan/report', 'Api\ManagerController@getSalesmanVisitPlanForVerify');
     Route::get('salesman/pendingvisitplan', 'Api\ManagerController@getPendingVisitPlan');
-
+    Route::get('salesman/visitplan/approve', 'Api\ManagerController@getSalesmanVisitPlanForApprove');
 
     /*
      * VERIFICATION

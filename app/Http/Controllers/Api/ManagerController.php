@@ -55,7 +55,9 @@ class ManagerController extends Controller
      *
      */
 
-    public function getSalesmanVisitPlan(Request $request)
+
+    //untuk approve
+    public function getSalesmanVisitPlanForApprove(Request $request)
     {
         $this->validate($request, [
             'month' => 'required|integer|min:1|max:12',
@@ -65,10 +67,45 @@ class ManagerController extends Controller
         $month = $request['month'];
         $year = $request['year'];
 
-        $visitplans = DB::table('visit_plans')
-            ->whereMonth('valid_date', $month)
-            ->whereYear('valid_date', $year)
-            ->where('status', 2) //means accepted
+        $manager = $request->user();
+        $salesmans_id = $manager->group->members->pluck('id');
+
+        $visitplans = VisitPlan::whereMonth('valid_date', '=',$month)
+            ->whereYear('valid_date','=', $year)
+            ->where('status', 0)
+            ->whereIn('user_id', $salesmans_id)
+            ->orderByDesc('id')
+            ->get();
+
+        foreach ($visitplans as $item){
+            $item->user = User::find($item->user_id)->name;
+        }
+
+        return response()->json($visitplans, 200);
+    }
+
+    //untuk verify
+    public function getSalesmanVisitPlanForVerify(Request $request)
+    {
+        $this->validate($request, [
+            'month' => 'required|integer|min:1|max:12',
+            'year' => 'required|integer',
+        ]);
+
+        $month = $request['month'];
+        $year = $request['year'];
+
+        $manager = $request->user();
+        $salesmans_id = $manager->group->members->pluck('id');
+
+        $visitplans = VisitPlan::whereMonth('valid_date', '=',$month)
+            ->whereYear('valid_date','=', $year)
+            ->whereIn('user_id', $salesmans_id)
+            ->where('status', 2)
+            ->withCount('list_plans as numb_of_plans')
+            ->withCount(array('list_plans as numb_of_done'=>function($query){
+                $query->where('status_done',2);
+            }))
             ->get();
 
         foreach ($visitplans as $item){
