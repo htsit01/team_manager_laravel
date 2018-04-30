@@ -58,8 +58,10 @@ Route::middleware('auth:api')->group(function(){
     Route::post('followup/report', 'Api\PlanController@saveFollowUpReport');
 
     Route::get('salesman/visitplan/report', 'Api\ManagerController@getSalesmanVisitPlanForVerify');
-    Route::get('salesman/pendingvisitplan', 'Api\ManagerController@getPendingVisitPlan');
-    Route::get('salesman/visitplan/approve', 'Api\ManagerController@getSalesmanVisitPlanForApprove');
+//    Route::get('salesman/pendingvisitplan', 'Api\ManagerController@getPendingVisitPlan');
+    Route::get('salesman/visitplan', 'Api\ManagerController@getSalesmanVisitPlanForApprove');
+    Route::post('salesman/visitplan/approve', 'Api\ManagerController@approveSalesmanVisitPlan');
+    Route::get('salesman/visitplan/{id}/plan-list', 'Api\ManagerController@getUserVisitPlanList');
 
     /*
      * VERIFICATION
@@ -74,6 +76,7 @@ Route::middleware('auth:api')->group(function(){
     Route::post('visitplan/plan-list/checkin', 'Api\CustomerController@postCheckin');
     Route::post('visitplan/plan-list/checkout', 'Api\CustomerController@postCheckout');
     Route::post('followup/checkin','Api\CustomerController@followUpCheckin');
+    Route::post('followup/checkout','Api\CustomerController@followUpCheckout');
 
     /*
      * Follow Up

@@ -559,7 +559,7 @@ class CustomerController extends Controller
             'lat'=>'required',
             'lng'=>'required',
             'address'=>'required',
-            'end_time'=>'required|date_format:Y-m-d H:i:s', // i in this case is minute
+            'finish_time'=>'required|date_format:Y-m-d H:i:s', // i in this case is minute
             'followup_id'=>'required',
             'type'=>'required|integer|min:0|max:1'
         ]);
@@ -598,7 +598,7 @@ class CustomerController extends Controller
             $followup->checkout_lat = $lat;
             $followup->checkout_lng = $lng;
             $followup->checkout_address = $address;
-            $followup->finish_time = $request['end_time'];
+            $followup->finish_time = $request['finish_time'];
             $followup->status_done = 2; //checkout
             $followup->status_color = 1; //done color: green (in report, color will be represent as gray)
             $followup->update();

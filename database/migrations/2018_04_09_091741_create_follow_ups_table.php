@@ -21,7 +21,7 @@ class CreateFollowUpsTable extends Migration
             $table->string('checkin_address')->nullable();
             $table->double('checkout_lat')->nullable();
             $table->double('checkout_lng')->nullable();
-            $table->double('checkout_address')->nullable();
+            $table->string('checkout_address')->nullable();
             $table->string('name');
             $table->string('address');
             $table->unsignedInteger('status_done')->default(0);
